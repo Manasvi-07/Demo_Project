@@ -30,7 +30,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS","").split(",")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
+
 
 # Application definition
 DJANGO_APPS = [
@@ -96,7 +97,7 @@ WSGI_APPLICATION = 'demo_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': os.getenv('ENGINE'),
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
@@ -139,13 +140,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = os.getenv("STATIC_URL")
-STATICFILES_DIRS = [BASE_DIR / "static"]  
-STATIC_ROOT = os.getenv("STATIC_ROOT")
+# Static & Media
+STATIC_URL = os.getenv("STATIC_URL", "/static/")
+STATIC_ROOT = os.getenv("STATIC_ROOT", os.path.join(BASE_DIR, "staticfiles"))
 
-# Media files (user uploads)
-MEDIA_URL = os.getenv("MEDIA_URL")
-MEDIA_ROOT = os.getenv("MEDIA_ROOT")
+MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
+MEDIA_ROOT = os.getenv("MEDIA_ROOT", os.path.join(BASE_DIR, "media"))
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
