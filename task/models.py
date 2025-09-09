@@ -26,7 +26,17 @@ class Task(BaseModel):
     priority = models.CharField(max_length=50, choices=PriorityChoice, default=PriorityChoice.MEDIUM)
     assigned = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='assigned_tasks')
     created = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='created_tasks')
+    completed = models.BooleanField(default=False)
     due_date = models.DateTimeField()
 
     def __str__(self):
         return f"{self.title}({self.project.title})"
+    
+class TaskAttachment(models.Model):
+    task = models.ForeignKey(Task, related_name='attachments', on_delete=models.CASCADE)
+    file = models.FileField(upload_to='task_attachments/', null=True, blank=True)
+    image = models.ImageField(upload_to='task_images/', null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Attachment for {self.task.title}"
