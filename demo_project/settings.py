@@ -34,16 +34,8 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS","").split(",")
 
 
 # Application definition
-
-INSTALLED_APPS = [
-    'account',
-    'task',
-    'corsheaders',
+DJANGO_APPS = [
     "django_filters",
-    'rest_framework',
-    'rest_framework.authtoken',
-    'rest_framework_simplejwt',
-    'channels',
     'django_celery_beat',
     'drf_spectacular',
     'django.contrib.admin',
@@ -53,6 +45,21 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+THIRD_PARTY_APPS = [
+    'corsheaders',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt',
+    'channels',
+]
+
+INHOUSE_APPS = [
+    'account',
+    'task',
+]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + INHOUSE_APPS
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
