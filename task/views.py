@@ -9,8 +9,6 @@ from account.enums import RoleChoices
 import logging
 from task.tasks import send_mail_task_notification
 from task.utils import notify_task_update
-from drf_spectacular.utils import extend_schema
-from . import serializers
 
 logger = logging.getLogger("task")
 
@@ -80,7 +78,6 @@ class TaskAttachmentUploadView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
-    @extend_schema(request=serializers.TaskAttachmentSerializer, responses=TaskAttachmentSerializer)
     def perform_create(self, serializer):
         task_id = self.kwargs.get("task_id")
         task = Task.objects.get(id=task_id)
