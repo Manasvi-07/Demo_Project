@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Task
+from .models import Task, TaskAttachment
 
 class TaskAdmin(admin.ModelAdmin):
     list_display = (
@@ -15,5 +15,8 @@ class TaskAdmin(admin.ModelAdmin):
     search_fields = ('title', 'assigned__email', 'created__email')
     ordering = ('-due_date',)
 
+class TaskAttachmentAdmin(admin.ModelAdmin):
+    list_display = ('task', 'uploaded_at', 'file','image')
 
 admin.site.register(Task, TaskAdmin)
+admin.site.register(TaskAttachment, TaskAttachmentAdmin)
