@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from task.models import Project, Task
+from .models import Project, Task, TaskAttachment
 from account.models import CustomUser
 from account.enums import RoleChoices
 
@@ -10,12 +10,20 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ['id', 'title', 'description', 'deadline', 'owner', 'created_at', 'updated_at']
 
+
+class TaskAttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskAttachment
+        fields = ['id', 'task', 'file', 'image','uploaded_at']
+        read_only_fields = ['id','uploaded_at', 'task']
+
 class TaskSerializer(serializers.ModelSerializer):
+    attachments = TaskAttachmentSerializer(many=True, read_only=True)
     created = serializers.ReadOnlyField(source="created.id")
 
     class Meta:
         model = Task
-        fields = ['id', 'project','title', 'description', 'status', 'priority', 'assigned', 'created','due_date', 'created_at', 'updated_at',]
+        fields = ['id', 'project','title', 'description', 'status', 'priority', 'assigned', 'created','due_date', 'created_at', 'updated_at', 'attachments']
 
     def validate_assigned(self, value):
         if value is None:
@@ -35,3 +43,9 @@ class TaskSerializer(serializers.ModelSerializer):
         if user.role == RoleChoices.DEVELOPER:
             raise serializers.ValidationError("developer are not allowed to assign tasks.")
         return value
+
+class TaskAttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskAttachment
+        fields = ['id', 'task', 'file', 'image','uploaded_at']
+        read_only_fields = ['id','uploaded_at', 'task']
