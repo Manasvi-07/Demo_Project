@@ -2,8 +2,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import Project, Task
-from task.serializers import ProjectSerializer, TaskSerializer
+from .models import Project, Task, TaskAttachment
+from task.serializers import ProjectSerializer, TaskSerializer, TaskAttachmentSerializer
 from task.permissions import IsAdminOrManager, IsAdminManagerOrTaskOwner
 from account.enums import RoleChoices
 import logging
@@ -73,3 +73,15 @@ class TaskDetailsView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated,IsAdminManagerOrTaskOwner]
     queryset = Task.objects.all()
+
+class TaskAttachmentUploadView(generics.CreateAPIView):
+    queryset = TaskAttachment.objects.all()
+    serializer_class = TaskAttachmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    @extend_schema(request=serializers.TaskAttachmentSerializer, responses=TaskAttachmentSerializer)
+    def perform_create(self, serializer):
+        task_id = self.kwargs.get("task_id")
+        task = Task.objects.get(id=task_id)
+        serializer.save(task=task)

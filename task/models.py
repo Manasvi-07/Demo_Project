@@ -31,3 +31,12 @@ class Task(BaseModel):
 
     def __str__(self):
         return f"{self.title}({self.project.title})"
+    
+class TaskAttachment(models.Model):
+    task = models.ForeignKey(Task, related_name='attachments', on_delete=models.CASCADE)
+    file = models.FileField(upload_to='task_attachments/', null=True, blank=True)
+    image = models.ImageField(upload_to='task_images/', null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Attachment for {self.task.title}"
