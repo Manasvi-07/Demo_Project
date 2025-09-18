@@ -43,9 +43,3 @@ class TaskSerializer(serializers.ModelSerializer):
         if user.role == RoleChoices.DEVELOPER:
             raise serializers.ValidationError("developer are not allowed to assign tasks.")
         return value
-
-class TaskAttachmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TaskAttachment
-        fields = ['id', 'task', 'file', 'image','uploaded_at']
-        read_only_fields = ['id','uploaded_at', 'task']
