@@ -1,9 +1,9 @@
-from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer, ValidationError, CharField
 from .models import CustomUser
 from .enums import RoleChoices
 
-class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only = True)
+class UserSerializer(ModelSerializer):
+    password = CharField(write_only = True)
 
     class Meta:
         model = CustomUser
@@ -13,7 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
 
         if user.is_authenticated and user.role == RoleChoices.MANAGER and value != RoleChoices.DEVELOPER:
-            raise serializers.ValidationError("Manager can create only Developers")
+            raise ValidationError("Manager can create only Developers")
         return value
     
     def create(self, validated_data):
@@ -33,7 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
     
-class AdminSerializer(serializers.ModelSerializer):
+class AdminSerializer(ModelSerializer):
 
     class Meta:
         model = CustomUser
