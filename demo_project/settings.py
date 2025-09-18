@@ -50,9 +50,7 @@ THIRD_PARTY_APPS = [
     'rest_framework_simplejwt',
 ]
 
-INHOUSE_APPS = [
-    'account',
-]
+INHOUSE_APPS = ['account']
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + INHOUSE_APPS
 
