@@ -6,11 +6,14 @@ from account.enums import RoleChoices
 from account.serializers import UserSerializer, AdminSerializer
 from account.utils import get_token_for_user
 from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import extend_schema
+from . import serializers
 
 class AdminSignupView(generics.CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
 
+    @extend_schema(request=serializers.UserSerializer, responses=UserSerializer)
     def perform_create(self, serializer):
         self.user = serializer.save(role = RoleChoices.ADMIN)
 
@@ -25,6 +28,7 @@ class UserSignupView(generics.CreateAPIView, generics.ListAPIView):
     queryset = CustomUser.objects.all().order_by("id")
     permission_classes = [IsAuthenticated, IsAdminOrManagerAddDeveloper]
     
+    @extend_schema(request=serializers.UserSerializer, responses=UserSerializer)
     def perform_create(self, serializer):
         self.user = serializer.save()
 
@@ -38,6 +42,7 @@ class UserProfileUpdateView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=serializers.UserSerializer, responses=UserSerializer)
     def get_object(self):
         return self.request.user
     
@@ -46,6 +51,7 @@ class UserRoleUpdateView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated, IsAdminOrManager]
     queryset = CustomUser.objects.all()
 
+    @extend_schema(request=serializers.AdminSerializer, responses=AdminSerializer)
     def perform_update(self, serializer):
         updater = self.request.user
         target_user = self.get_object()
