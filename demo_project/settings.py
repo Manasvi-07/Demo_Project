@@ -50,7 +50,9 @@ THIRD_PARTY_APPS = [
     'rest_framework_simplejwt',
 ]
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS 
+INHOUSE_APPS = ['account']
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + INHOUSE_APPS
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -96,6 +98,8 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT'),
     }
 }
+
+AUTH_USER_MODEL = "account.CustomUser"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
