@@ -1,5 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, permissions
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Project, Task, TaskAttachment
@@ -12,10 +13,10 @@ from task.utils import notify_task_update
 
 logger = logging.getLogger("task")
 
-class ProjectView(generics.ListCreateAPIView):
+class ProjectCreateView(ListCreateAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = Project.objects.all().order_by('id')
+    permission_classes = [IsAuthenticated]
+    queryset = Project.objects.all()
 
     def get_queryset(self):
         user = self.request.user
@@ -28,16 +29,20 @@ class ProjectView(generics.ListCreateAPIView):
             raise PermissionDenied("Developer can not create project")
         serializer.save(owner=self.request.user)
 
-class ProjectDetailsView(generics.RetrieveUpdateDestroyAPIView):
+class ProjectDetailsView(RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     queryset = Project.objects.all()
 
-class TaskView(generics.ListCreateAPIView):
+class TaskCreateView(ListCreateAPIView):
     serializer_class = TaskSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrManager]
-    queryset = Project.objects.all().order_by('id')
+    queryset = Task.objects.all()
 
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAuthenticated(), IsAdminOrManager()]
+        return [IsAuthenticated()]
+    
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["project", "due_date", "status", "priority"]
     ordering_fields = ["due_date", "priority", "created_at"]
@@ -67,15 +72,15 @@ class TaskView(generics.ListCreateAPIView):
         logger.info(f"Developer {user.email} show only owned assigned task")
         return queryset.filter(assigned=user)           
     
-class TaskDetailsView(generics.RetrieveUpdateDestroyAPIView):
+class TaskDetailsView(RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
-    permission_classes = [permissions.IsAuthenticated,IsAdminManagerOrTaskOwner]
+    permission_classes = [IsAuthenticated,IsAdminManagerOrTaskOwner]
     queryset = Task.objects.all()
 
-class TaskAttachmentUploadView(generics.CreateAPIView):
+class TaskAttachmentUploadView(CreateAPIView):
     queryset = TaskAttachment.objects.all()
     serializer_class = TaskAttachmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer):

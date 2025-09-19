@@ -35,6 +35,8 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS","").split(",")
 
 # Application definition
 DJANGO_APPS = [
+    "django_filters",
+    'django_celery_beat',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -48,6 +50,7 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
+    'channels',
 ]
 
 INHOUSE_APPS = [
@@ -225,7 +228,7 @@ CELERY_TASK_SERIALIZER = 'json'
 
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 
-ASGI_APPLICATION = 'taskmanager.asgi.application'
+ASGI_APPLICATION = 'demo_project.asgi.application'
 
 REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = os.getenv("REDIS_PORT")
