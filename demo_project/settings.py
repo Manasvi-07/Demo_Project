@@ -35,6 +35,8 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS","").split(",")
 
 # Application definition
 DJANGO_APPS = [
+    "django_filters",
+    'django_celery_beat',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -48,6 +50,7 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
+    'channels',
 ]
 
 INHOUSE_APPS = [

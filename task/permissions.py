@@ -1,11 +1,11 @@
-from rest_framework import permissions
+from rest_framework.permissions import BasePermission
 from account.enums import RoleChoices
 
-class IsAdminOrManager(permissions.BasePermission):
+class IsAdminOrManager(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role in [RoleChoices.ADMIN, RoleChoices.MANAGER]
     
-class IsAdminManagerOrTaskOwner(permissions.BasePermission):
+class IsAdminManagerOrTaskOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
         user = request.user
         if user.role == RoleChoices.ADMIN:
