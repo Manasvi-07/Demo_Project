@@ -1,7 +1,7 @@
-from rest_framework import permissions
+from rest_framework.permissions import BasePermission
 from .enums import RoleChoices
 
-class BaseRolePermission(permissions.BasePermission):
+class BaseRolePermission(BasePermission):
     allowed_roles: tuple = ()
 
     def has_permission(self, request, view):
@@ -14,6 +14,3 @@ class BaseRolePermission(permissions.BasePermission):
 
 class IsAdminOrManager(BaseRolePermission):
     allowed_roles = (RoleChoices.ADMIN, RoleChoices.MANAGER)
-
-class IsAdminOrManagerAddDeveloper(IsAdminOrManager):
-    pass
