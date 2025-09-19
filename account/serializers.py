@@ -1,19 +1,24 @@
-from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer, ValidationError, CharField
 from .models import CustomUser
 from .enums import RoleChoices
 
-class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only = True)
+class UserSerializer(ModelSerializer):
+    password = CharField(write_only = True)
 
     class Meta:
         model = CustomUser
         fields = ['id', 'email','password','role']
 
     def validate_role(self, value):
-        user = self.context['request'].user
-
-        if user.is_authenticated and user.role == RoleChoices.MANAGER and value != RoleChoices.DEVELOPER:
-            raise serializers.ValidationError("Manager can create only Developers")
+        request= self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return value
+        
+        current_user = request.user
+        if current_user.role == RoleChoices.MANAGER and value != RoleChoices.DEVELOPER:
+            raise ValidationError("Manager can assign only Developer role.")
+        if current_user.role == RoleChoices.DEVELOPER:
+            raise ValidationError("You are not allowed to change roles.")
         return value
     
     def create(self, validated_data):
@@ -33,9 +38,21 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
     
-class AdminSerializer(serializers.ModelSerializer):
+class AdminSerializer(ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email','password','role']
+        fields = ['id', 'email','role']
+        read_only_fields = ['id', 'email']
         
+    def validate_role(self, value):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            if request.user.role == RoleChoices.MANAGER and value != RoleChoices.DEVELOPER:
+                raise ValidationError("Manager can create only Developers")
+        return value
+    
+    def update(self, instance, validated_data):
+        instance.role = validated_data.get('role', instance.role)
+        instance.save()
+        return instance

@@ -1,5 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, permissions
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Project, Task, TaskAttachment
@@ -10,14 +11,13 @@ import logging
 from task.tasks import send_mail_task_notification
 from task.utils import notify_task_update
 from drf_spectacular.utils import extend_schema
-from . import serializers
 
 logger = logging.getLogger("task")
 
-class ProjectView(generics.ListCreateAPIView):
+class ProjectCreateView(ListCreateAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = Project.objects.all().order_by('id')
+    permission_classes = [IsAuthenticated]
+    queryset = Project.objects.all()
 
     def get_queryset(self):
         user = self.request.user
@@ -25,28 +25,32 @@ class ProjectView(generics.ListCreateAPIView):
             return Project.objects.all()
         return Project.objects.filter(owner=user)
     
-    @extend_schema(request=serializers.ProjectSerializer, responses= ProjectSerializer)
+    @extend_schema(request=ProjectSerializer, responses= ProjectSerializer)
     def perform_create(self, serializer):
         if self.request.user.role == RoleChoices.DEVELOPER:
             raise PermissionDenied("Developer can not create project")
         serializer.save(owner=self.request.user)
 
-class ProjectDetailsView(generics.RetrieveUpdateDestroyAPIView):
+class ProjectDetailsView(RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     queryset = Project.objects.all()
 
-class TaskView(generics.ListCreateAPIView):
+class TaskCreateView(ListCreateAPIView):
     serializer_class = TaskSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrManager]
-    queryset = Project.objects.all().order_by('id')
+    queryset = Task.objects.all()
 
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAuthenticated(), IsAdminOrManager()]
+        return [IsAuthenticated()]
+    
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["project", "due_date", "status", "priority"]
     ordering_fields = ["due_date", "priority", "created_at"]
     search_fields = ['title', "description", "assigned__email"]
 
-    @extend_schema(request=serializers.TaskSerializer, responses= TaskSerializer)
+    @extend_schema(request=TaskSerializer, responses= TaskSerializer)
     def perform_create(self, serializer):
         task = serializer.save(created=self.request.user)
         logger.info(
@@ -71,18 +75,18 @@ class TaskView(generics.ListCreateAPIView):
         logger.info(f"Developer {user.email} show only owned assigned task")
         return queryset.filter(assigned=user)           
     
-class TaskDetailsView(generics.RetrieveUpdateDestroyAPIView):
+class TaskDetailsView(RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
-    permission_classes = [permissions.IsAuthenticated,IsAdminManagerOrTaskOwner]
+    permission_classes = [IsAuthenticated,IsAdminManagerOrTaskOwner]
     queryset = Task.objects.all()
 
-class TaskAttachmentUploadView(generics.CreateAPIView):
+class TaskAttachmentUploadView(CreateAPIView):
     queryset = TaskAttachment.objects.all()
     serializer_class = TaskAttachmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
-    @extend_schema(request=serializers.TaskAttachmentSerializer, responses=TaskAttachmentSerializer)
+    @extend_schema(request=TaskAttachmentSerializer, responses=TaskAttachmentSerializer)
     def perform_create(self, serializer):
         task_id = self.kwargs.get("task_id")
         task = Task.objects.get(id=task_id)

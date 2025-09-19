@@ -32,7 +32,7 @@ def test_list_projects(api_client, create_user):
     Project.objects.create(title="P2", description="Test2", deadline=timezone.make_aware(datetime.datetime(2025, 12, 31)), owner=admin)
 
     api_client.force_authenticate(user=admin)
-    url = reverse("Project_create_list")
+    url = reverse("project_create_list")
     resp = api_client.get(url)
     assert resp.status_code == 200
     assert len(resp.data) >= 2
@@ -44,7 +44,7 @@ def test_update_project(api_client, create_user):
     project = Project.objects.create(title="Old", description="Test", deadline=timezone.make_aware(datetime.datetime(2025, 12, 31)), owner=admin)
 
     api_client.force_authenticate(user=admin)
-    url = reverse("Project_details_update_delete", args=[project.id])
+    url = reverse("project_details_update_delete", args=[project.id])
     payload = {"title": "Updated", "description": "Updated", "deadline": "2026-01-01"}
     resp = api_client.put(url, payload, format="json")
     assert resp.status_code == 200
@@ -58,7 +58,7 @@ def test_delete_project(api_client, create_user):
     project = Project.objects.create(title="DeleteMe", description="Test", deadline=timezone.make_aware(datetime.datetime(2025, 12, 31)), owner=admin)
 
     api_client.force_authenticate(user=admin)
-    url = reverse("Project_details_update_delete", args=[project.id])
+    url = reverse("project_details_update_delete", args=[project.id])
     resp = api_client.delete(url)
     assert resp.status_code == 204
     assert not Project.objects.filter(id=project.id).exists()
@@ -78,7 +78,7 @@ def test_list_tasks(api_client, create_user):
     Task.objects.create(project=project, title="T2", description="D2", status="in_progress", priority="high", assigned=dev, due_date=aware_due)
 
     api_client.force_authenticate(user=manager)
-    url = reverse("Task_list_create")
+    url = reverse("task_create_list")
     resp = api_client.get(url)
     assert resp.status_code == 200
     assert len(resp.data) >= 2
@@ -103,7 +103,7 @@ def test_update_task(api_client, create_user):
     )
 
     api_client.force_authenticate(user=manager)
-    url = reverse("task_details_update_detelet", args=[task.id])
+    url = reverse("task_details_update_delete", args=[task.id])
     payload = {
         "project": project.id, 
         "title": "Updated Task",
@@ -130,7 +130,7 @@ def test_delete_task(api_client, create_user):
     task = Task.objects.create(project=project, title="DeleteMe", description="Test", status="todo", priority="low", assigned=dev, due_date=aware_due)
 
     api_client.force_authenticate(user=manager)
-    url = reverse("task_details_update_detelet", args=[task.id])
+    url = reverse("task_details_update_delete", args=[task.id])
     resp = api_client.delete(url)
     assert resp.status_code == 204
     assert not Task.objects.filter(id=task.id).exists()

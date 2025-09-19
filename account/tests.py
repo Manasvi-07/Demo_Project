@@ -26,7 +26,7 @@ def test_user_signup(api_client, create_user):
 
     api_client.force_authenticate(user=admin)
 
-    url = reverse("Create_user")
+    url = reverse("create_user")
     payload = {
         "email": "newuser@example.com",
         "password": "StrongPass123",
@@ -39,7 +39,7 @@ def test_user_signup(api_client, create_user):
 @pytest.mark.django_db
 def test_user_login(api_client, create_user):
     user, pwd = create_user(RoleChoices.DEVELOPER)
-    url = reverse("User_login")  
+    url = reverse("user_login")  
     payload = {
         "email": user.email,
         "password": pwd,
@@ -51,7 +51,7 @@ def test_user_login(api_client, create_user):
 
 @pytest.mark.django_db
 def test_invalid_login(api_client):
-    url = reverse("User_login")
+    url = reverse("user_login")
     payload = {"email": "fake@example.com", "password": "wrong"}
     resp = api_client.post(url, payload, format="json")
     assert resp.status_code == 401

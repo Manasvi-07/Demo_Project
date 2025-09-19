@@ -236,7 +236,7 @@ CELERY_TASK_SERIALIZER = 'json'
 
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 
-ASGI_APPLICATION = 'taskmanager.asgi.application'
+ASGI_APPLICATION = 'demo_project.asgi.application'
 
 REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = os.getenv("REDIS_PORT")
