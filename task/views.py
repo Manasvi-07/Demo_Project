@@ -40,41 +40,49 @@ class TaskCreateView(ListCreateAPIView):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
 
-    def get_permissions(self):
-        if self.request.method == "POST":
-            return [IsAuthenticated(), IsAdminOrManager()]
-        return [IsAuthenticated()]
-    
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["project", "due_date", "status", "priority"]
     ordering_fields = ["due_date", "priority", "created_at"]
     search_fields = ['title', "description", "assigned__email"]
 
-    @extend_schema(request=TaskSerializer, responses= TaskSerializer)
-    def perform_create(self, serializer):
-        task = serializer.save(created=self.request.user)
-        logger.info(
-            f"Task created: {task.title} "
-            f"(Project: {task.project.title if task.project else 'No Project'}, "
-            f"Assigned: {task.assigned.email if task.assigned else 'Unassigned'}) "
-            f"created {self.request.user.email}"
-        )
-        send_mail_task_notification.delay(task.id)
-        notify_task_update(task)
-        
     def get_queryset(self):
         user = self.request.user
-        queryset = Task.objects.select_related("assigned","created", "project").order_by("-created_at")
+        queryset = Task.objects.select_related("created", "project").prefetch_related("assigned").order_by("-created_at")
 
         if user.role == RoleChoices.ADMIN:
             logger.info(f"Admin {user.email} view all task")
             return queryset
         elif user.role == RoleChoices.MANAGER:
             logger.info(f"Manager {user.email} show only owned task created")
-            return queryset.filter(project__owner=user)
+            owned= queryset.filter(project__owner=user)
+            created = queryset.filter(created=user)
+            assigned = queryset.filter(assigned=user)
+            return (owned | created | assigned).distinct()
+        
         logger.info(f"Developer {user.email} show only owned assigned task")
-        return queryset.filter(assigned=user)           
+        return queryset.filter(assigned=user).distinct()
+
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAuthenticated(), IsAdminOrManager()]
+        return [IsAuthenticated()]
     
+    @extend_schema(request=TaskSerializer, responses= TaskSerializer)
+    def perform_create(self, serializer):
+        task = serializer.save(created=self.request.user)
+        assigned_users = serializer.validated_data.get('assigned', [])
+        task.assigned.set(assigned_users)
+        assigned_emails = ", ".join([u.email for u in task.assigned.all()]) if task.assigned.exists() else "Unassigned"
+        logger.info(
+            f"Task created: {task.title} "
+            f"(Project: {task.project.title if task.project else 'No Project'}, "
+            f"Assigned: {assigned_emails if assigned_emails else 'Unassigned'}) "
+            f"created {self.request.user.email}"
+        )
+        send_mail_task_notification.delay(task.id)
+        notify_task_update(task)        
+        return task
+
 class TaskDetailsView(RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated,IsAdminManagerOrTaskOwner]

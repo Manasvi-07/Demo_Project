@@ -4,7 +4,7 @@ from .models import Task, TaskAttachment
 class TaskAdmin(admin.ModelAdmin):
     list_display = (
         'title',
-        'assigned',
+        'get_assigned',
         'created',
         'priority',
         'status',
@@ -15,6 +15,10 @@ class TaskAdmin(admin.ModelAdmin):
     search_fields = ('title', 'assigned__email', 'created__email')
     ordering = ('-due_date',)
 
+    def get_assigned(self, obj):
+        return ",".join([user.email for user in obj.assigned.all()])
+    get_assigned.short_description = "Assigned_to"
+    
 class TaskAttachmentAdmin(admin.ModelAdmin):
     list_display = ('task', 'uploaded_at', 'file','image')
 

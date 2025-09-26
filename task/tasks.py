@@ -7,7 +7,7 @@ from task.utils import notify_task_update
 @shared_task
 def send_mail_task_notification(task_id):
     try : 
-        task = Task.objects.select_related('assigned').get(id=task_id)
+        task = Task.objects.select_related('created', 'project').prefetch_related('assigned').get(id=task_id)
 
         if task.assigned.email:
             subject = f"New Task Assigned : {task.title}"
