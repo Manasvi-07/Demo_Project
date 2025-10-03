@@ -9,35 +9,37 @@ def send_mail_task_notification(task_id):
     try : 
         task = Task.objects.select_related('created', 'project').prefetch_related('assigned').get(id=task_id)
 
-        if task.assigned.email:
-            subject = f"New Task Assigned : {task.title}"
-            message = f"{task.description}\n\n Due : {task.due_date.strftime('%Y-%m-%d %H:%M')}"
-            from_email = settings.DEFAULT_FROM_EMAIL
-            recipient_list = [task.assigned.email]
-            send_mail(subject, message, from_email, recipient_list, fail_silently=False)
-            return f"Email sent to {task.assigned.email}"
-        return "Assigned user has no email"
-    
+        for user in task.assigned.all():
+            if user.email:
+                subject = f"New Task Assigned: {task.title}"
+                message = f"{task.description}\n\n Due: {task.due_date.strftime('%Y-%m-%d %H:%M')}"
+                from_email = settings.DEFAULT_FROM_EMAIL
+                send_mail(subject, message, from_email, [user.email], fail_silently=False)
+
+        return f"Emails sent to {[u.email for u in task.assigned.all() if u.email]}"
+
     except Task.DoesNotExist:
-        return "task not found"
+        return "Task not found"
 
 @shared_task 
 def daily_task_reminder():
-    task = Task.objects.select_related('assigned').filter(
+    task = Task.objects.filter(
         completed=False,
         assigned__isnull=False,
         assigned__email__isnull=False,
-    )
+    ).select_related("created", "project").prefetch_related("assigned")
 
     count = 0
     for task in task:
-        subject = f"New Task Assigned : {task.title}"
-        message = f"{task.description}\n\n Due : {task.due_date.strftime('%Y-%m-%d %H:%M')}"
-        from_email = settings.DEFAULT_FROM_EMAIL
-        recipient_list = [task.assigned.email]
-        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+        for user in task.assigned.all():
+            if user.email:
+                subject = f"New Task Assigned : {task.title}"
+                message = f"{task.description}\n\n Due : {task.due_date.strftime('%Y-%m-%d %H:%M')}"
+                from_email = settings.DEFAULT_FROM_EMAIL
+                send_mail(subject, message, from_email, [user.email], fail_silently=False)
+                count += 1
+
         notify_task_update(task)
-        count += 1
 
     print(f"Reminder task complete. Total reminders sent: {count}")
-    return f"Reminders sent for {count} task(s)"
+    return f"Reminders sent for {count} user(s)"
